@@ -68,6 +68,9 @@
 #include <rte_ring.h>
 #include <rte_mempool.h>
 #include <rte_mbuf.h>
+#include "public.h"
+#include "rubicon.h"
+#include "ModuleDecode.h"
 
 #define RTE_LOGTYPE_L2FWD RTE_LOGTYPE_USER1
 
@@ -338,8 +341,46 @@ l2fwd_main_loop(void)
 			for (j = 0; j < nb_rx; j++) {
 				m = pkts_burst[j];
 				rte_prefetch0(rte_pktmbuf_mtod(m, void *));
+                Packet_t *pPacket;
+                
+            pPacket = (Packet_t *)m->buf_addr;
+            pPacket->pMBuf = m;
+            pPacket->pData = rte_pktmbuf_mtod(m, unsigned char *);
+            pPacket->unLen = rte_pktmbuf_pkt_len(m);
+            pPacket->pEnd = pPacket->pData + pPacket->unLen;
+            pPacket->unNicPortSrc = portid;
+            pPacket->enDirection = 1;
+            pPacket->unNicPortDst = 1;
+            pPacket->unNicPortGroup = 1;
+            pPacket->ullTimeMS = 1000000;
+            pPacket->nOffloadFlag = 0;
+        pPacket->pCurrent = pPacket->pData;
+        pPacket->pIPOuter = NULL;
+        pPacket->pIPInner = NULL;
+        pPacket->pTcpUdpInner = NULL;
+        void * (* NextDecode)(Packet_t * pPacket) = DecodeEth;
+        while(NextDecode)
+            NextDecode = (void *(*)(Packet_t *))NextDecode(pPacket);
+        if(NULL != pPacket->pTcpUdpInner)
+        {
+        
+        DECODE_IP(pPacket->stIpSrc, pPacket->stIpDst, pPacket->unCtrlProtocol, pPacket->pIPInner);
+        if((IPPROTO_TCP == pPacket->unCtrlProtocol) || (IPPROTO_UDP == pPacket->unCtrlProtocol))
+        {
+            unsigned char * pCurrent = pPacket->pTcpUdpInner;
+            pPacket->usPortSrc = READ_SHORT(pCurrent);
+            pCurrent += 2;
+            pPacket->usPortDst = READ_SHORT(pCurrent);
+        }
+        else
+        {
+            pPacket->usPortSrc = 0;
+            pPacket->usPortDst = 0;
+        }
+        pPacket->pPayload = pPacket->pCurrent;
+        }
 				l2fwd_simple_forward(m, portid);
-			}
+            }
 		}
 	}
 }
