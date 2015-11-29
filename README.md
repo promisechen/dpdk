@@ -25,7 +25,7 @@ ixgbe_dev_tx_queue_setup注册->ixgbe_xmit_pkts-》A.ixgbe_xmit_pkts_simple-》t
 B.ixgbe_xmit_pkts->rte_pktmbuf_free_seg  __rte_pktmbuf_prefree_seg->__rte_mbuf_raw_free->rte_mempool_put
 
 7. 孤立核
-  cat /proc/interrupts 
+  `cat /proc/interrupts 
 
    ps -Leo pid,tid,args:30,psr,comm
    
@@ -40,7 +40,7 @@ B.ixgbe_xmit_pkts->rte_pktmbuf_free_seg  __rte_pktmbuf_prefree_seg->__rte_mbuf_r
  systemctl list-unit-files|grep irq
  
  isolcpus=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39 hugepages=1024
- 
+ `
    http://blog.csdn.net/maray/article/details/6123725
 ##vtune
 [命令行快速使用手册](https://software.intel.com/zh-cn/blogs/2010/11/10/amplxe-cl/)
