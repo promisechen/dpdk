@@ -26,13 +26,21 @@ B.ixgbe_xmit_pkts->rte_pktmbuf_free_seg  __rte_pktmbuf_prefree_seg->__rte_mbuf_r
 
 7. 孤立核
   cat /proc/interrupts 
+
    ps -Leo pid,tid,args:30,psr,comm
+   
  grubby --update-kernel=ALL --args="isolcpus=0,2,4,6,8,10,12,14,16,18,20,22,24,26,28,30,32,34,36,3811,13,15,17,19,31,33,35,37,39"
+ 
  grubby --update-kernel=ALL --remove-args="isolcpus"
+ 
  systemctl disable irqbalance.service
+ 
  systemctl stop irqbalance.service
+ 
  systemctl list-unit-files|grep irq
+ 
  isolcpus=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39 hugepages=1024
+ 
    http://blog.csdn.net/maray/article/details/6123725
 ##vtune
 [命令行快速使用手册](https://software.intel.com/zh-cn/blogs/2010/11/10/amplxe-cl/)
