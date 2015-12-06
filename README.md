@@ -25,9 +25,9 @@ ixgbe_dev_tx_queue_setup注册->ixgbe_xmit_pkts-》A.ixgbe_xmit_pkts_simple-》t
 B.ixgbe_xmit_pkts->rte_pktmbuf_free_seg  __rte_pktmbuf_prefree_seg->__rte_mbuf_raw_free->rte_mempool_put
 
 7. 孤立核
- cat /proc/interrupts 
 
-   ps -Leo pid,tid,args:30,psr,comm
+
+
    
  grubby --update-kernel=ALL --args="isolcpus=0,2,4,6,8,10,12,14,16,18,20,22,24,26,28,30,32,34,36,3811,13,15,17,19,31,33,35,37,39"
  
@@ -50,6 +50,7 @@ B.ixgbe_xmit_pkts->rte_pktmbuf_free_seg  __rte_pktmbuf_prefree_seg->__rte_mbuf_r
     iostat mpstat numastat sar (yum install sysstat)
    top htop 
     cat /proc/interrupts
+   ps -Leo pid,tid,args:30,psr,comm
 ##vtune
 [命令行快速使用手册](https://software.intel.com/zh-cn/blogs/2010/11/10/amplxe-cl/)
 amplxe-cl -collect hotspots ./bin
