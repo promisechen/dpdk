@@ -51,6 +51,8 @@ B.ixgbe_xmit_pkts->rte_pktmbuf_free_seg  __rte_pktmbuf_prefree_seg->__rte_mbuf_r
    top htop 
     cat /proc/interrupts
    ps -Leo pid,tid,args:30,psr,comm
+10.大页页面大小
+     mount -t hugetlbfs nodev /mnt/huge -o pagesize=1G 
 ##vtune
 [命令行快速使用手册](https://software.intel.com/zh-cn/blogs/2010/11/10/amplxe-cl/)
 amplxe-cl -collect hotspots ./bin
