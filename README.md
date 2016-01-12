@@ -46,14 +46,18 @@ B.ixgbe_xmit_pkts->rte_pktmbuf_free_seg  __rte_pktmbuf_prefree_seg->__rte_mbuf_r
    service irqbalance stop 
    service irqbalance status   
    查看中断  mpstat -I SUM -P ALL 1 
+   
 8. 优化工具
     iostat mpstat numastat sar (yum install sysstat)
    top htop 
     cat /proc/interrupts
    ps -Leo pid,tid,args:30,psr,comm
+
 10.大页页面大小
+default_hugepagesz=1G hugepagesz=1G hugepages=4
      mount -t hugetlbfs nodev /mnt/huge -o pagesize=1G 
 http://blog.csdn.net/fan_hai_ping/article/details/40436883
+
 ##vtune
 [命令行快速使用手册](https://software.intel.com/zh-cn/blogs/2010/11/10/amplxe-cl/)
 amplxe-cl -collect hotspots ./bin
