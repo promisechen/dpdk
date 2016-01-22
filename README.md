@@ -50,12 +50,9 @@ B.ixgbe_xmit_pkts->rte_pktmbuf_free_seg  __rte_pktmbuf_prefree_seg->__rte_mbuf_r
    ps -Leo pid,tid,args:30,psr,comm
 
 9. 大页页面大小
- 设置1G大页，只能在启动项中设置。命令如下：
-
- default_hugepagesz=1G hugepagesz=1G hugepages=4
- 
- http://www.sysight.com/index.php?qa=17&qa_1=hugepage的优势与使用
- 
+ 设置1G大页，只能在启动项中设置。命令如下：  
+ default_hugepagesz=1G hugepagesz=1G hugepages=4  
+ http://www.sysight.com/index.php?qa=17&qa_1=hugepage的优势与使用  
  hugepage内存分配好后，要使其对DPDK可用，需要执行以下操作：
  
  mkdir /mnt/huge
