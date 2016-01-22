@@ -25,10 +25,6 @@ ixgbe_dev_tx_queue_setup注册->ixgbe_xmit_pkts-》A.ixgbe_xmit_pkts_simple-》t
 B.ixgbe_xmit_pkts->rte_pktmbuf_free_seg  __rte_pktmbuf_prefree_seg->__rte_mbuf_raw_free->rte_mempool_put
 
 7. 孤立核
-
-
-
-   
  grubby --update-kernel=ALL --args="isolcpus=0,2,4,6,8,10,12,14,16,18,20,22,24,26,28,30,32,34,36,3811,13,15,17,19,31,33,35,37,39"
  
  grubby --update-kernel=ALL --remove-args="isolcpus"
@@ -54,8 +50,18 @@ B.ixgbe_xmit_pkts->rte_pktmbuf_free_seg  __rte_pktmbuf_prefree_seg->__rte_mbuf_r
    ps -Leo pid,tid,args:30,psr,comm
 
 10.大页页面大小
+设置1G大页，只能在启动项中设置。命令如下：
 default_hugepagesz=1G hugepagesz=1G hugepages=4
-     mount -t hugetlbfs nodev /mnt/huge -o pagesize=1G 
+http://www.sysight.com/index.php?qa=17&qa_1=hugepage的优势与使用
+hugepage内存分配好后，要使其对DPDK可用，需要执行以下操作：
+# mkdir /mnt/huge
+# mount -t hugetlbfs nodev /mnt/huge
+也可以在/etc/fstab文件中添加以下命令，使其重启后有效：
+nodev /mnt/huge hugetlbfs defaults 0 0
+对于1G的页，页大小必须作为mount选项指定：
+nodev /mnt/huge_1GB hugetlbfs pagesize=1GB 0 0
+
+mount -t hugetlbfs nodev /mnt/huge -o pagesize=1G 
 http://blog.csdn.net/fan_hai_ping/article/details/40436883
 
 ##vtune
