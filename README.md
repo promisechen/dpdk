@@ -25,53 +25,37 @@ ixgbe_dev_tx_queue_setup注册->ixgbe_xmit_pkts-》A.ixgbe_xmit_pkts_simple-》t
 B.ixgbe_xmit_pkts->rte_pktmbuf_free_seg  __rte_pktmbuf_prefree_seg->__rte_mbuf_raw_free->rte_mempool_put
 
 7. 孤立核
- grubby --update-kernel=ALL --args="isolcpus=0,2,4,6,8,10,12,14,16,18,20,22,24,26,28,30,32,34,36,3811,13,15,17,19,31,33,35,37,39"
- 
- grubby --update-kernel=ALL --remove-args="isolcpus"
- 
- systemctl disable irqbalance.service
- 
- systemctl stop irqbalance.service
- 
- systemctl list-unit-files|grep irq
- 
- isolcpus=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39 hugepages=1024
-
-   http://blog.csdn.net/maray/article/details/6123725
+ grubby --update-kernel=ALL --args="isolcpus=0,2,4,6,8,10,12,14,16,18,20,22,24,26,28,30,32,34,36,3811,13,15,17,19,31,33,35,37,39"  
+ grubby --update-kernel=ALL --remove-args="isolcpus"  
+ systemctl disable irqbalance.service  
+ systemctl stop irqbalance.service  
+ systemctl list-unit-files|grep irq  
+ isolcpus=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39 hugepages=1024  
+   http://blog.csdn.net/maray/article/details/6123725  
    关闭irqbalance（和多队列网卡绑定cpu有冲突） 
-   service irqbalance stop 
+   service irqbalance stop  
    service irqbalance status   
-   查看中断  mpstat -I SUM -P ALL 1 
-   
+   查看中断  mpstat -I SUM -P ALL 1  
 8. 优化工具
-    iostat mpstat numastat sar (yum install sysstat)
-   top htop 
-    cat /proc/interrupts
-   ps -Leo pid,tid,args:30,psr,comm
-
+    iostat mpstat numastat sar (yum install sysstat)  
+   top htop  
+    cat /proc/interrupts  
+   ps -Leo pid,tid,args:30,psr,comm  
 9. 大页页面大小
  设置1G大页，只能在启动项中设置。命令如下：  
  default_hugepagesz=1G hugepagesz=1G hugepages=4  
  http://www.sysight.com/index.php?qa=17&qa_1=hugepage的优势与使用  
- hugepage内存分配好后，要使其对DPDK可用，需要执行以下操作：
- 
- mkdir /mnt/huge
- 
- mount -t hugetlbfs nodev /mnt/huge
- 
- 也可以在/etc/fstab文件中添加以下命令，使其重启后有效：
- 
- nodev /mnt/huge hugetlbfs defaults 0 0
- 
- 对于1G的页，页大小必须作为mount选项指定：
- 
- nodev /mnt/huge_1GB hugetlbfs pagesize=1GB 0 0
-
- mount -t hugetlbfs nodev /mnt/huge -o pagesize=1G 
- 
+ hugepage内存分配好后，要使其对DPDK可用，需要执行以下操作： 
+ mkdir /mnt/huge  
+ mount -t hugetlbfs nodev /mnt/huge  
+ 也可以在/etc/fstab文件中添加以下命令，使其重启后有效： 
+ nodev /mnt/huge hugetlbfs defaults 0 0  
+ 对于1G的页，页大小必须作为mount选项指定： 
+ nodev /mnt/huge_1GB hugetlbfs pagesize=1GB 0 0  
+ mount -t hugetlbfs nodev /mnt/huge -o pagesize=1G  
  http://blog.csdn.net/fan_hai_ping/article/details/40436883
 
 ##vtune
-[命令行快速使用手册](https://software.intel.com/zh-cn/blogs/2010/11/10/amplxe-cl/)
-amplxe-cl -collect hotspots ./bin
-amplxe-cl -report hotspots -r r000hs 
+[命令行快速使用手册](https://software.intel.com/zh-cn/blogs/2010/11/10/amplxe-cl/)  
+amplxe-cl -collect hotspots ./bin  
+amplxe-cl -report hotspots -r r000hs  
