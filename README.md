@@ -22,7 +22,7 @@
 
 6. 发送的时候,调用free和put
 ixgbe_dev_tx_queue_setup注册->ixgbe_xmit_pkts-》A.ixgbe_xmit_pkts_simple-》tx_xmit_pkts-》ixgbe_tx_free_bufs->rte_mempool_put
-B.ixgbe_xmit_pkts->rte_pktmbuf_free_seg  __rte_pktmbuf_prefree_seg->__rte_mbuf_raw_free->rte_mempool_put
+B.ixgbe_xmit_pkts->rte_pktmbuf_free_seg  __rte_pktmbuf_prefree_seg->__rte_mbuf_raw_free->rte_mempool_put  
 
 7. 孤立核
  grubby --update-kernel=ALL --args="isolcpus=0,2,4,6,8,10,12,14,16,18,20,22,24,26,28,30,32,34,36,3811,13,15,17,19,31,33,35,37,39"  
@@ -53,8 +53,11 @@ B.ixgbe_xmit_pkts->rte_pktmbuf_free_seg  __rte_pktmbuf_prefree_seg->__rte_mbuf_r
  对于1G的页，页大小必须作为mount选项指定： 
  nodev /mnt/huge_1GB hugetlbfs pagesize=1GB 0 0  
  mount -t hugetlbfs nodev /mnt/huge -o pagesize=1G  
- http://blog.csdn.net/fan_hai_ping/article/details/40436883
+ http://blog.csdn.net/fan_hai_ping/article/details/40436883  
 
+10. 调试dpdk
+     export EXTRA_CFLAGS="-O0 -g"
+     make -C x86_64-default-linuxapp-gcc/
 ##vtune
 [命令行快速使用手册](https://software.intel.com/zh-cn/blogs/2010/11/10/amplxe-cl/)  
 amplxe-cl -collect hotspots ./bin  
