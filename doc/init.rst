@@ -53,7 +53,7 @@ rte_eal_cpu_init
     获取lcore_id对应得socket
     首先从/sys/devices/system/cpu/cpu%u/读取是否包含nodeX的目录，如果读取到则X即socketid
     若不包含，则从/sys/devices/system/cpu/cpu％u/topology/physical_package_id文件中获取,以替代socketid
-     Note: physical package id != NUMA node, but we use it as a fallback for kernels which don't create a nodeY link
+     Note: physical package id != NUMA nmde, but we use it as a fallback for kernels which don't create a nodeY link
 
      如果获取的socketid大于RTE_MAX_NUMA_NODES，则根据RTE_EAL_ALLOW_INV_SOCKET_ID宏定义来觉得。当设置RTE_EAL_ALLOW_INV_SOCKET_ID时
       会lcore_config[lcore_id].socket_id = 0;否则退出程序，打印堆栈。
@@ -64,4 +64,36 @@ eal_parse_args
 函数调用
 --------
     eal_reset_internal_config(&internal_config);//初始化默认参数
+主要接口描述
+------------
+*   eal_parse_coremask:解析-c 参数，并会修改rte_config及lcore_config中lcore对应的计数、flag等
+*   eal_parse_corelist:解析-l 与-c效果相同;可以同时添加-c -l,但是会取后面的那个选项的配置。
+*   eal_parse_lcores :解析--lcore,重新设置lcore绑定的cpu. 
+
+    -c指定的核心，必须都重新设定，该函数首先会lcore_config[idx].core_index = -1;将所有
+    核心对应设置为无效。
+    参考下面的注释，以“,”隔开。
+    如1 表示1号lcore_id设置不变，还是对应1号核心
+    7-8表示lcore_id7 8仍对应7 8核心
+    1@2 表示将lcore_id1绑定到2号核心
+    1@(2,3)表示将1号核心绑定到2 3核心
+    (0,6) 表示0和6号核心为一个组？？
+    注意:－表示范围
+    
+    /*
+     * The format pattern: --lcores='<lcores[@cpus]>[<,lcores[@cpus]>...]'
+     * lcores, cpus could be a single digit/range or a group.
+     * '(' and ')' are necessary if it's a group.
+     * If not supply '@cpus', the value of cpus uses the same as lcores.
+     * e.g. '1,2@(5-7),(3-5)@(0,2),(0,6),7-8' means start 9 EAL thread as below
+     *   lcore 0 runs on cpuset 0x41 (cpu 0,6)
+     *   lcore 1 runs on cpuset 0x2 (cpu 1)
+     *   lcore 2 runs on cpuset 0xe0 (cpu 5,6,7)
+     *   lcore 3,4,5 runs on cpuset 0x5 (cpu 0,2)
+     *   lcore 6 runs on cpuset 0x41 (cpu 0,6)
+     *   lcore 7 runs on cpuset 0x80 (cpu 7)
+     *   lcore 8 runs on cpuset 0x100 (cpu 8)
+     */
+
+
 
