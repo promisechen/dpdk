@@ -6,14 +6,21 @@ rte_eal_cpu_init
 主要设置了全局变量rte_config的lcore_count lcore_role,该字段是当前机器所有逻辑核心数。
     设置了全局变量lcore_config的core cpu_set相关信息
 该函数将输出如下信息
+
 "
 EAL: Detected lcore 0 as core 0 on socket 0
+
 EAL: Detected lcore 1 as core 0 on socket 0
+
 EAL: Detected lcore 2 as core 0 on socket 0
+
 EAL: Detected lcore 3 as core 0 on socket 0
+
 EAL: Support maximum 128 logical core(s) by configuration.
+
 EAL: Detected 4 lcore(s)
 "
+
 相关的外部接口及变量
 ---------------------
 rte_config
@@ -50,4 +57,11 @@ rte_eal_cpu_init
 
      如果获取的socketid大于RTE_MAX_NUMA_NODES，则根据RTE_EAL_ALLOW_INV_SOCKET_ID宏定义来觉得。当设置RTE_EAL_ALLOW_INV_SOCKET_ID时
       会lcore_config[lcore_id].socket_id = 0;否则退出程序，打印堆栈。
+eal_parse_args
+===============
+相关的外部接口和变量
+---------------------
+函数调用
+--------
+    eal_reset_internal_config(&internal_config);//初始化默认参数
 
