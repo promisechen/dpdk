@@ -59,6 +59,59 @@ rte_eal_cpu_init
       会lcore_config[lcore_id].socket_id = 0;否则退出程序，打印堆栈。
 eal_parse_args
 ===============
+
+EAL common options:
+  -c COREMASK         Hexadecimal bitmask of cores to run on
+  -l CORELIST         List of cores to run on
+                      The argument format is <c1>[-c2][,c3[-c4],...]
+                      where c1, c2, etc are core indexes between 0 and 128
+  --lcores COREMAP    Map lcore set to physical cpu set
+                      The argument format is
+                            '<lcores[@cpus]>[<,lcores[@cpus]>...]'
+                      lcores and cpus list are grouped by '(' and ')'
+                      Within the group, '-' is used for range separator,
+                      ',' is used for single number separator.
+                      '( )' can be omitted for single element group,
+                      '@' can be omitted if cpus and lcores have the same value
+  --master-lcore ID   Core ID that is used as master
+  -n CHANNELS         Number of memory channels
+  -m MB               Memory to allocate (see also --socket-mem)
+  -r RANKS            Force number of memory ranks (don't detect)
+  -b, --pci-blacklist Add a PCI device in black list.
+                      Prevent EAL from using this PCI device. The argument
+                      format is <domain:bus:devid.func>.
+  -w, --pci-whitelist Add a PCI device in white list.
+                      Only use the specified PCI devices. The argument format
+                      is <[domain:]bus:devid.func>. This option can be present
+                      several times (once per device).
+                      [NOTE: PCI whitelist cannot be used with -b option]
+  --vdev              Add a virtual device.
+                      The argument format is <driver><id>[,key=val,...]
+                      (ex: --vdev=eth_pcap0,iface=eth2).
+  -d LIB.so|DIR       Add a driver or driver directory
+                      (can be used multiple times)
+  --vmware-tsc-map    Use VMware TSC map instead of native RDTSC
+  --proc-type         Type of this process (primary|secondary|auto)
+  --syslog            Set syslog facility
+  --log-level         Set default log level
+  -v                  Display version information on startup
+  -h, --help          This help
+
+EAL options for DEBUG use only:
+  --huge-unlink       Unlink hugepage files after init
+  --no-huge           Use malloc instead of hugetlbfs
+  --no-pci            Disable PCI
+  --no-hpet           Disable HPET
+  --no-shconf         No shared config (mmap'd files)
+
+EAL Linux options:
+  --socket-mem        Memory to allocate on sockets (comma separated values)
+  --huge-dir          Directory where hugetlbfs is mounted
+  --file-prefix       Prefix for hugepage filenames
+  --base-virtaddr     Base virtual address
+  --create-uio-dev    Create /dev/uioX (usually done by hotplug)
+  --vfio-intr         Interrupt mode for VFIO (legacy|msi|msix)
+  --xen-dom0          Support running on Xen dom0 without hugetlbfs
 相关的外部接口和变量
 ---------------------
 函数调用
@@ -94,6 +147,15 @@ eal_parse_args
      *   lcore 7 runs on cpuset 0x80 (cpu 7)
      *   lcore 8 runs on cpuset 0x100 (cpu 8)
      */
-
-
+*  rte_eal_devargs_add:解析-b -c --dev ,将调用该函数。
+     --dev:添加虚拟驱动
+     --w:  将只会加载-w指定的网卡，只通过setup.sh脚步配置的网卡时不会加载的。 通过查看变量rte_eth_devices得出的结论。
+     --b: 指定网卡加入黑名单，即被指定网卡不会被加载。 
+    
+    该函数逻辑：创建rte_devargs-> 解析参数->将创建的rte_devargs挂在devargs_list链表上。
+    rte_devargs结构体储存网卡设备类型（黑名单，白名单，虚拟驱动）->设备对应的设备的pci编号或驱动类类型（虚拟驱动有eth_pcap,if之类）
+* eal_parse_proc_type
+    默认程序时RTE_PROC_PRIMARY
+* 其他
+    其他参数大多存在来internal_config全局变量中
 
