@@ -1,5 +1,18 @@
 log
 ====
+
+样例
+=================
+
+相关的外部接口及变量
+---------------------
+
+函数调用
+---------
+
+主要接口描述
+------------
+
 rte_eal_cpu_init
 =================
 该函数主要是解析/sys/devices/system/cpu文件，获取物理及逻辑核心，并填充cpu_info信息。
@@ -158,4 +171,40 @@ EAL Linux options:
     默认程序时RTE_PROC_PRIMARY
 * 其他
     其他参数大多存在来internal_config全局变量中
+
+eal_hugepage_info_init 
+========================
+只有在未设置no_hugetlbfs并且未设置xen的支持且为主进程时，才会调用该函数。
+
+填充internal_config.hugepage_info［］信息，该数组最大为4
+* 遍历/sys/kernel/mm/hugepages目录下所有以hugepages-开头的文件，但只能取前3个。
+* 获取该大页的大小，如hugepages-2048kB则大页大小为2MB
+* 获取大页路径,并使用flock设置写锁
+* 晴空大页路径下的*map_*的文件，如果没有被其他dpdk进程运行
+* 获取大页个数
+相关的外部接口及变量
+---------------------
+
+函数调用
+---------
+rte_str_to_size 获取大页大小
+get_hugepage_dir 获取大页的路径
+clear_hugedir 清空大页相关文件如果没有被其他dpdk进程运行
+get_num_hugepages 获取大页个数
+主要接口描述
+------------
+* get_hugepage_dir: 
+    先调用get_default_hp_size获取默认页面大小
+     读取 /proc/mounts |grep hugetlbfs ，如果在选项字段包含pagesize=字段，则获取该值为pagesize,并与入参比较，确定大页目录
+      如果选项字段不包含pageseze=字段，则以默认页面大小与入参比较，确定大页目录。
+      所以返回的目录会又随机型，大部分系统是这样返回的
+      [root@vmware hugepages]# cat /proc/mounts |grep hugetlbfs
+      hugetlbfs /dev/hugepages hugetlbfs rw,relatime 0 0
+      nodev /mnt/huge hugetlbfs rw,relatime 0 0
+      那么对此种配置，则会选取靠前面的挂载点作为大页默认目录
+ 另外，如果使用--huge-dir显示的设置internal_config.hugepage_dir,则会以此目录作为大页路径
+
+* get_default_hp_size:获取大页默认大小，从cat /proc/meminfo | grep Hugepagesize中读取。
+
+* get_num_hugepages: 获取大页个数，从/sys/kernel/mm/hugepages/hugepages-xxx/中获取，free_hugepages－resv_hugepages即为所求值
 
