@@ -72,8 +72,9 @@ rte_eal_cpu_init
       会lcore_config[lcore_id].socket_id = 0;否则退出程序，打印堆栈。
 eal_parse_args
 ===============
+ ::
 
-EAL common options:
+ EAL common options:
   -c COREMASK         Hexadecimal bitmask of cores to run on
   -l CORELIST         List of cores to run on
                       The argument format is <c1>[-c2][,c3[-c4],...]
@@ -110,14 +111,14 @@ EAL common options:
   -v                  Display version information on startup
   -h, --help          This help
 
-EAL options for DEBUG use only:
+    EAL options for DEBUG use only:
   --huge-unlink       Unlink hugepage files after init
   --no-huge           Use malloc instead of hugetlbfs
   --no-pci            Disable PCI
   --no-hpet           Disable HPET
   --no-shconf         No shared config (mmap'd files)
 
-EAL Linux options:
+    EAL Linux options:
   --socket-mem        Memory to allocate on sockets (comma separated values)
   --huge-dir          Directory where hugetlbfs is mounted
   --file-prefix       Prefix for hugepage filenames
@@ -125,6 +126,8 @@ EAL Linux options:
   --create-uio-dev    Create /dev/uioX (usually done by hotplug)
   --vfio-intr         Interrupt mode for VFIO (legacy|msi|msix)
   --xen-dom0          Support running on Xen dom0 without hugetlbfs
+
+
 相关的外部接口和变量
 ---------------------
 函数调用
@@ -160,6 +163,7 @@ EAL Linux options:
      *   lcore 7 runs on cpuset 0x80 (cpu 7)
      *   lcore 8 runs on cpuset 0x100 (cpu 8)
      */
+
 *  rte_eal_devargs_add:解析-b -c --dev ,将调用该函数。
      --dev:添加虚拟驱动
      --w:  将只会加载-w指定的网卡，只通过setup.sh脚步配置的网卡时不会加载的。 通过查看变量rte_eth_devices得出的结论。
@@ -174,27 +178,40 @@ EAL Linux options:
 
 eal_hugepage_info_init 
 ========================
+
 只有在未设置no_hugetlbfs并且未设置xen的支持且为主进程时，才会调用该函数。
 
 填充internal_config.hugepage_info［］信息，该数组最大为4
+
 * 遍历/sys/kernel/mm/hugepages目录下所有以hugepages-开头的文件，但只能取前3个。
+
 * 获取该大页的大小，如hugepages-2048kB则大页大小为2MB
+
 * 获取大页路径,并使用flock设置写锁
+
 * 晴空大页路径下的*map_*的文件，如果没有被其他dpdk进程运行
+
 * 获取大页个数
+
 相关的外部接口及变量
 ---------------------
 
 函数调用
 ---------
+
 rte_str_to_size 获取大页大小
+
 get_hugepage_dir 获取大页的路径
+
 clear_hugedir 清空大页相关文件如果没有被其他dpdk进程运行
+
 get_num_hugepages 获取大页个数
+
 主要接口描述
 ------------
 * get_hugepage_dir: 
-    先调用get_default_hp_size获取默认页面大小
+   :: 
+   先调用get_default_hp_size获取默认页面大小
      读取 /proc/mounts |grep hugetlbfs ，如果在选项字段包含pagesize=字段，则获取该值为pagesize,并与入参比较，确定大页目录
       如果选项字段不包含pageseze=字段，则以默认页面大小与入参比较，确定大页目录。
       所以返回的目录会又随机型，大部分系统是这样返回的
@@ -202,7 +219,7 @@ get_num_hugepages 获取大页个数
       hugetlbfs /dev/hugepages hugetlbfs rw,relatime 0 0
       nodev /mnt/huge hugetlbfs rw,relatime 0 0
       那么对此种配置，则会选取靠前面的挂载点作为大页默认目录
- 另外，如果使用--huge-dir显示的设置internal_config.hugepage_dir,则会以此目录作为大页路径
+      另外，如果使用--huge-dir显示的设置internal_config.hugepage_dir,则会以此目录作为大页路径
 
 * get_default_hp_size:获取大页默认大小，从cat /proc/meminfo | grep Hugepagesize中读取。
 
