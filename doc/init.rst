@@ -1,6 +1,6 @@
 
 http://www.cnblogs.com/MerlinJ/p/4074391.html
-
+http://www.cnblogs.com/ding-linux-coder/p/4922583.html
 log
 ====
 
@@ -300,10 +300,176 @@ rte_eal_mcfg_wait_complete:等待主进程rte_eal_mcfg_complete完成内存配�
   读取rte_config.mem_cfg_addr(主进程存的虚拟地址)。并使用该地址从新调用mmap，从而保证进程间虚拟地址相同。
 
 
+rte_eal_pci_init(todo)
+====================
+相关的外部接口及变量
+---------------------
+
+函数调用
+---------
+
+主要接口描述
+------------
+
+rte_eal_memory_init
+====================
+
+主进程调用rte_eal_hugepage_init，子进程调用rte_eal_hugepage_attach
+相关的外部接口及变量
+---------------------
+
+函数调用
+---------
+
+主要接口描述
+------------
+rte_eal_hugepage_init
+=======================
+
+lib/librte_eal/linuxapp/eal/eal_memory.c
+
+*  1. map N huge pages in separate files in hugetlbfs
+*  2. find associated physical addr
+*  3. find associated NUMA socket ID
+*  4. sort all huge pages by physical address
+*  5. remap these N huge pages in the correct order
+*  6. unmap the first mapping
+*  7. fill memsegs in configuration with contiguous zones
+    这个时候可以正确设置num_pages了internal_config.hugepage_info[j].num_pages[socket]++;
+    将大页内存信息存入/var/run/.rte_hugepage_info的共享内存
+若干个页根据是否连续，是否同一个socket，是否相同页尺寸等，\
+   分成最多RTE_MAX_MEMSEG(默认256)个内存段(memory segment)：
+
+    .. code-block:: c
+
+ if (new_memseg) {
+
+ j += 1;
+ if (j == RTE_MAX_MEMSEG)
+ break;
+
+ mcfg->memseg[j].phys_addr = hugepage[i].physaddr;
+ mcfg->memseg[j].addr = hugepage[i].final_va;
+ mcfg->memseg[j].len = hugepage[i].size;
+ mcfg->memseg[j].socket_id = hugepage[i].socket_id;
+ mcfg->memseg[j].hugepage_sz = hugepage[i].size;
+ }
+ // continuation of previous memseg
+ else
+ mcfg->memseg[j].len += mcfg->memseg[j].hugepage_sz;
+
+ hugepage[i].memseg_id = j;
+
+ }
+
+相关的外部接口及变量
+---------------------
+
+函数调用
+---------
+
+主要接口描述
+------------
+*  map_all_hugepages(struct hugepage_file *hugepg_tbl,struct hugepage_info *hpi, int orig) 
+  
+    循环hpi->num_pages[0]遍历，比如设置512个内存大页面，则会创建512个rtemap_xxx 个文件。
+   
+    eal_get_hugefile_path将返回rte_mapxxx文件名称，放到hugepg_tbl[i].filepath中。
+    
+    调用open mmap分配hugepage_sz大小的内存virtadd。
+    
+    vma_addr有讲究(其实这段是为第二次重新分配内存设计的逻辑)：
+    当设置RTE_EAL_SINGLE_FILE_SEGMENTS时，将调用get_virtual_area获取虚拟地址。
+    
+    当为设置时的逻辑是：rtemap_0是通过mmap获取的，而 rtemap_1---rtemap_n是根据virtaddr逐步加hugepage_sz，
+    
+    然后作为参数传给mmap,但是当该虚拟地址被使用则会重新分配一个地址。不知道dpdk的用意？？。
+    
+    如果orig==1,则hugepg_tbl[i].orig_va = virtadd，否则hugepg_tbl[i].final_va = virtaddr;
+    
+    调用flock锁定rtemap_xxx文件
+    
+    vma_addr = (char *)vma_addr + hugepage_sz;
+
+    第二次重新mmap的逻辑如下：
+   
+    首先从当前i处开始找物理连续的内存页个数n，然后调用get_virtual_area获取足够的虚拟地址。get_virtual_area将会尽最大努力获取到
+   
+    [1,n)个大小的虚拟地址空间，然后把vma_len付为获取到的最大虚拟内存块。
+   
+    另一个代码逻辑（我感觉这个逻辑没用）：如果该虚拟地址不够则会将vma_len设置成
+   
+    hugepage_sz, 然后会在努力从i+1处，继续找到n-1个连续内存块，然后继续调用get_virtual_area获取足够的虚拟内存块。
+   
+    vma_len设计也是有作者的自己的思想的，vma_len是由物理连续块个数及虚拟地址区域决定的，当无法获取足够大的虚拟内存区域时，直接将
+   
+    vma_len设置成一块，在vma_addr = (char *)vma_addr + hugepage_sz;vma_len -= hugepage_sz;执行的时候不会出错。同时下面的核心代码，也只有
+   
+    vma_len被减成0时，才需要在重新调用get_virtual_area获取最大虚拟内存块的。
+   
+    核心代码
+  
+    .. code-block :: c
+
+ for (j = i+1; j < hpi->num_pages[0] ; j++) {
+ #ifdef RTE_ARCH_PPC_64
+ /* The physical addresses are sorted in
+ * descending order on PPC64 */
+   if (hugepg_tbl[j].physaddr !=
+   hugepg_tbl[j-1].physaddr - hugepage_sz)
+   break;
+   #else
+   if (hugepg_tbl[j].physaddr !=
+   hugepg_tbl[j-1].physaddr + hugepage_sz)
+   break;
+   #endif
+   }
+   num_pages = j - i;
+   vma_len = num_pages * hugepage_sz;
+
+ /* get the biggest virtual memory area up to
+ * vma_len. If it fails, vma_addr is NULL, so
+   * let the kernel provide the address. */
+     vma_addr = get_virtual_area(&vma_len, hpi->hugepage_sz);
+     if (vma_addr == NULL)
+     vma_len = hugepage_sz;
+     }
 
 
+* find_physaddrs 获取所有共享内存的物理地址，其实都是调用rte_mem_virt2phy实现的。
 
+  rte_mem_virt2phy 根据虚拟地址转换成物理地址。从/proc/self/pagemap读取相关page信息.总体思想是获取page,根据page加上页内偏移算出物理地址。
+  
+  具体参考：https://shanetully.com/2014/12/translating-virtual-addresses-to-physcial-addresses-in-user-space/
 
+* find_numasocket 获取虚拟内存对应的socketid；从/proc/self/numa_maps读取出现huge或者internal_config.hugefile_prefix字符的行,类似
 
+  “01e00000 prefer:0 file=/dev/hugepages/rtemap_15 huge dirty=1 N0=1" 其中01e00000是虚拟地址，NO表示：N代表numa,0代表是socketid等于0
+* sort_by_physaddr 根据物理内存排序
 
+* get_virtual_area(size_t *size, size_t hugepage_sz) 获取虚拟地址空间.有两点：1. 使用mmap分配size+hugepage_sz大小空间 2.如果分配不出来减去hugepage_sz
+
+  在分配，直至分配出来为止。并修改size值，把他传给调用者。3,munmap掉刚分配出的内存。4.按照hugepage_sz大小对其，并返回对其后的地址（在调用mmap时故意多加来一个页面大小）
+下面初始化就是该函数打印的，总共分512个大页，共5段连续内存块。
+.. code-block:: c
+
+EAL: Ask a virtual area of 0x200000 bytes
+EAL: Virtual area found at 0x7ffff6c00000 (size = 0x200000)
+EAL: Ask a virtual area of 0x3f800000 bytes
+EAL: Virtual area found at 0x7fffb7200000 (size = 0x3f800000)
+EAL: Ask a virtual area of 0x200000 bytes
+EAL: Virtual area found at 0x7fffb6e00000 (size = 0x200000)
+EAL: Ask a virtual area of 0x200000 bytes
+EAL: Virtual area found at 0x7fffb6a00000 (size = 0x200000)
+EAL: Ask a virtual area of 0x200000 bytes
+EAL: Virtual area found at 0x7fffb6600000 (size = 0x200000)
+EAL: Requesting 512 pages of size 2MB from socket 0
+
+* unmap_all_hugepages_orig 调用munmap将第一次mmap的大页(hugepg_tbl[i].orig_va)释放掉。
+* calc_num_pages_per_socket 计算每个socket的页面数，应该与--socket-mem有关。（我感觉会根据某种策略来选择保留的大页面。todo）
+* unmap_unneeded_hugepages 释放不用的大页面内存。感觉这个函数与calc_num_pages_per_socket有很大关系。
+  }
+* unlink_hugepage_files 如果设置来－－huge-unlink，则会调用该函数，Unlink hugepage files after init。
+
+*create_shared_memory copy_hugepages_to_shared_mem: 使用/var/run/.rte_hugepage_info 调用nmap创建共享内存，将大页信息纪录到共享内存中。
 
