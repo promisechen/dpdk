@@ -182,7 +182,7 @@ eal_hugepage_info_init
 只有在未设置no_hugetlbfs并且未设置xen的支持且为主进程时，才会调用该函数。
 
 填充internal_config.hugepage_info［］信息，该数组最大为4
-
+函数执行流程: 
 * 遍历/sys/kernel/mm/hugepages目录下所有以hugepages-开头的文件，但只能取前3个。
 
 * 获取该大页的大小，如hugepages-2048kB则大页大小为2MB
@@ -211,7 +211,8 @@ get_num_hugepages 获取大页个数
 ------------
 * get_hugepage_dir: 
    :: 
-   先调用get_default_hp_size获取默认页面大小
+
+     先调用get_default_hp_size获取默认页面大小
      读取 /proc/mounts |grep hugetlbfs ，如果在选项字段包含pagesize=字段，则获取该值为pagesize,并与入参比较，确定大页目录
       如果选项字段不包含pageseze=字段，则以默认页面大小与入参比较，确定大页目录。
       所以返回的目录会又随机型，大部分系统是这样返回的
