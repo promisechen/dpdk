@@ -1,3 +1,6 @@
+
+http://www.cnblogs.com/MerlinJ/p/4074391.html
+
 log
 ====
 
@@ -182,7 +185,9 @@ eal_hugepage_info_init
 只有在未设置no_hugetlbfs并且未设置xen的支持且为主进程时，才会调用该函数。
 
 填充internal_config.hugepage_info［］信息，该数组最大为4
+
 函数执行流程: 
+
 * 遍历/sys/kernel/mm/hugepages目录下所有以hugepages-开头的文件，但只能取前3个。
 
 * 获取该大页的大小，如hugepages-2048kB则大页大小为2MB
@@ -225,4 +230,80 @@ get_num_hugepages 获取大页个数
 * get_default_hp_size:获取大页默认大小，从cat /proc/meminfo | grep Hugepagesize中读取。
 
 * get_num_hugepages: 获取大页个数，从/sys/kernel/mm/hugepages/hugepages-xxx/中获取，free_hugepages－resv_hugepages即为所求值
+
+rte_config_init
+=================
+初始化rte_config.mem_config，并保证主从进程的虚拟地址相同
+
+
+* 如果是主进程，则调用rte_eal_config_create，默认创建/var/run/.rte_config文件，调用mmap获取sizeof(struct rte_mem_config)大小的虚拟内存。并
+
+   将共享内存的基址存到共享内存中，供子进程使用，从而保证主次进程映射的基址相同。
+  参见rte_eal_config.h 中的struct rte_mem_config结构体
+
+* 如果是从进程则会先获取先调用mmap,获取主进程设置的rte_config.mem_cfg_addr(主进程映射的地址空间)，
+  从新调用mmap(使用祝进程的虚拟地址)，从而保证主从进程虚拟地址相同。
+  注意:从进程将一直等待主进程(rte_eal_mcfg_complete完成mem配置)，才会从新调用rte_eal_config_reattach()
+    rte_config_init(void)
+    {
+    	rte_config.process_type = internal_config.process_type;
+    
+    	switch (rte_config.process_type){
+    	case RTE_PROC_PRIMARY:
+    		rte_eal_config_create();
+    		break;
+    	case RTE_PROC_SECONDARY:
+    		rte_eal_config_attach();
+    		rte_eal_mcfg_wait_complete(rte_config.mem_config);
+    		rte_eal_config_reattach();
+    		break;
+    	case RTE_PROC_AUTO:
+    	case RTE_PROC_INVALID:
+    		rte_panic("Invalid process type\n");
+    	}
+    }
+
+
+
+相关的外部接口及变量
+---------------------
+
+rte_config
+
+函数调用
+---------
+
+主要接口描述
+------------
+
+* rte_eal_config_create(主进程调用) 首先调用eal_runtime_config_path 获取rte_config的文件路径
+  
+  如果设置--no-shconf 则直接return
+  
+  调用ftruncate fcnt设置.rte_config文件大小，锁定文件等。
+  
+  调用mmap获取rte_mem_config大小的内存，并将共享内存地址存到共享内存rte_config.mem_cfg_addr中
+
+* eal_runtime_config_path: 如果是root用户则会返回默认的/var/run/.rte_config(注意.rte_config 可以根据--file-prefix进行修改)
+
+* rte_eal_config_attach(从进程调用) 首先调用eal_runtime_config_path 获取rte_config的文件路径
+   
+  如果设置--no-shconf 则直接return
+
+  调用mmap获取内存内存基址,并将该地址存到rte_config.mem_config中。
+
+rte_eal_mcfg_wait_complete:等待主进程rte_eal_mcfg_complete完成内存配置
+
+
+* rte_eal_config_reattach(从进程调用) 
+  
+  读取rte_config.mem_cfg_addr(主进程存的虚拟地址)。并使用该地址从新调用mmap，从而保证进程间虚拟地址相同。
+
+
+
+
+
+
+
+
 
