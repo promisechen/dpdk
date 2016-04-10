@@ -456,19 +456,19 @@ lib/librte_eal/linuxapp/eal/eal_memory.c
 
 下面初始化就是该函数打印的，总共分512个大页，共5段连续内存块。
 
-.. code-block:: c
+::
 
-EAL: Ask a virtual area of 0x200000 bytes
-EAL: Virtual area found at 0x7ffff6c00000 (size = 0x200000)
-EAL: Ask a virtual area of 0x3f800000 bytes
-EAL: Virtual area found at 0x7fffb7200000 (size = 0x3f800000)
-EAL: Ask a virtual area of 0x200000 bytes
-EAL: Virtual area found at 0x7fffb6e00000 (size = 0x200000)
-EAL: Ask a virtual area of 0x200000 bytes
-EAL: Virtual area found at 0x7fffb6a00000 (size = 0x200000)
-EAL: Ask a virtual area of 0x200000 bytes
-EAL: Virtual area found at 0x7fffb6600000 (size = 0x200000)
-EAL: Requesting 512 pages of size 2MB from socket 0
+    EAL: Ask a virtual area of 0x200000 bytes
+    EAL: Virtual area found at 0x7ffff6c00000 (size = 0x200000)
+    EAL: Ask a virtual area of 0x3f800000 bytes
+    EAL: Virtual area found at 0x7fffb7200000 (size = 0x3f800000)
+    EAL: Ask a virtual area of 0x200000 bytes
+    EAL: Virtual area found at 0x7fffb6e00000 (size = 0x200000)
+    EAL: Ask a virtual area of 0x200000 bytes
+    EAL: Virtual area found at 0x7fffb6a00000 (size = 0x200000)
+    EAL: Ask a virtual area of 0x200000 bytes
+    EAL: Virtual area found at 0x7fffb6600000 (size = 0x200000)
+    EAL: Requesting 512 pages of size 2MB from socket 0
 
 * unmap_all_hugepages_orig 调用munmap将第一次mmap的大页(hugepg_tbl[i].orig_va)释放掉。
 
