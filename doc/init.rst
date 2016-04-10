@@ -477,9 +477,9 @@ lib/librte_eal/linuxapp/eal/eal_memory.c
 * get_virtual_area(size_t *size, size_t hugepage_sz) 获取虚拟地址空间.
   ::
   
-  有4点：1. 使用mmap分配size+hugepage_sz大小空间 2.如果分配不出来减去hugepage_sz
-  在分配，直至分配出来为止。并修改size值，把他传给调用者。3,munmap掉刚分配出的内存。4.按照hugepage_sz大小对其，并返回对其后的地址（在调用mmap时故意多加来一个页面大小）
-下面初始化就是该函数打印的，总共分512个大页，共5段连续内存块。
+    有4点：1. 使用mmap分配size+hugepage_sz大小空间 2.如果分配不出来减去hugepage_sz
+    在分配，直至分配出来为止。并修改size值，把他传给调用者。3,munmap掉刚分配出的内存。4.按照hugepage_sz大小对其，并返回对其后的地址（在调用mmap时故意多加来一个页面大小）
+    下面初始化就是该函数打印的，总共分512个大页，共5段连续内存块。
     EAL: Ask a virtual area of 0x200000 bytes
     EAL: Virtual area found at 0x7ffff6c00000 (size = 0x200000)
     EAL: Ask a virtual area of 0x3f800000 bytes
