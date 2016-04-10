@@ -410,40 +410,26 @@ lib/librte_eal/linuxapp/eal/eal_memory.c
   :: 
   
     循环hpi->num_pages[0]遍历，比如设置512个内存大页面，则会创建512个rtemap_xxx 个文件。
-   
-    eal_get_hugefile_path将返回rte_mapxxx文件名称，放到hugepg_tbl[i].filepath中。
-    
+    eal_get_hugefile_path将返回rte_mapxxx文件名称，放到hugepg_tbl[i].filepath中
     调用open mmap分配hugepage_sz大小的内存virtadd。
-    
     vma_addr有讲究(其实这段是为第二次重新分配内存设计的逻辑)：
     当设置RTE_EAL_SINGLE_FILE_SEGMENTS时，将调用get_virtual_area获取虚拟地址。
-    
     当为设置时的逻辑是：rtemap_0是通过mmap获取的，而 rtemap_1---rtemap_n是根据virtaddr逐步加hugepage_sz，
-    
     然后作为参数传给mmap,但是当该虚拟地址被使用则会重新分配一个地址。不知道dpdk的用意？？。
-    
     如果orig==1,则hugepg_tbl[i].orig_va = virtadd，否则hugepg_tbl[i].final_va = virtaddr;
-    
     调用flock锁定rtemap_xxx文件
-    
     vma_addr = (char *)vma_addr + hugepage_sz;
+    
+第二次重新mmap的逻辑如下：
+:: 
 
-    第二次重新mmap的逻辑如下：
-   
     首先从当前i处开始找物理连续的内存页个数n，然后调用get_virtual_area获取足够的虚拟地址。get_virtual_area将会尽最大努力获取到
-   
     [1,n)个大小的虚拟地址空间，然后把vma_len付为获取到的最大虚拟内存块。
-   
     另一个代码逻辑（我感觉这个逻辑没用）：如果该虚拟地址不够则会将vma_len设置成
-   
     hugepage_sz, 然后会在努力从i+1处，继续找到n-1个连续内存块，然后继续调用get_virtual_area获取足够的虚拟内存块。
-   
     vma_len设计也是有作者的自己的思想的，vma_len是由物理连续块个数及虚拟地址区域决定的，当无法获取足够大的虚拟内存区域时，直接将
-   
     vma_len设置成一块，在vma_addr = (char *)vma_addr + hugepage_sz;vma_len -= hugepage_sz;执行的时候不会出错。同时下面的核心代码，也只有
-   
     vma_len被减成0时，才需要在重新调用get_virtual_area获取最大虚拟内存块的。
-   
     核心代码
   
 .. code-block:: c
@@ -474,24 +460,26 @@ lib/librte_eal/linuxapp/eal/eal_memory.c
 
 
 * find_physaddrs 获取所有共享内存的物理地址，其实都是调用rte_mem_virt2phy实现的。
+::
 
   rte_mem_virt2phy 根据虚拟地址转换成物理地址。从/proc/self/pagemap读取相关page信息.总体思想是获取page,根据page加上页内偏移算出物理地址。
   
   具体参考：https://shanetully.com/2014/12/translating-virtual-addresses-to-physcial-addresses-in-user-space/
 
-* find_numasocket 获取虚拟内存对应的socketid；从/proc/self/numa_maps读取出现huge或者internal_config.hugefile_prefix字符的行,类似
+* find_numasocket 获取虚拟内存对应的socketid；
+::
+
+从/proc/self/numa_maps读取出现huge或者internal_config.hugefile_prefix字符的行,类似
 
   “01e00000 prefer:0 file=/dev/hugepages/rtemap_15 huge dirty=1 N0=1" 其中01e00000是虚拟地址，NO表示：N代表numa,0代表是socketid等于0
 * sort_by_physaddr 根据物理内存排序
 
-* get_virtual_area(size_t *size, size_t hugepage_sz) 获取虚拟地址空间.有两点：1. 使用mmap分配size+hugepage_sz大小空间 2.如果分配不出来减去hugepage_sz
-
+* get_virtual_area(size_t *size, size_t hugepage_sz) 获取虚拟地址空间.
+  ::
+  
+  有4点：1. 使用mmap分配size+hugepage_sz大小空间 2.如果分配不出来减去hugepage_sz
   在分配，直至分配出来为止。并修改size值，把他传给调用者。3,munmap掉刚分配出的内存。4.按照hugepage_sz大小对其，并返回对其后的地址（在调用mmap时故意多加来一个页面大小）
-
 下面初始化就是该函数打印的，总共分512个大页，共5段连续内存块。
-
-::
-
     EAL: Ask a virtual area of 0x200000 bytes
     EAL: Virtual area found at 0x7ffff6c00000 (size = 0x200000)
     EAL: Ask a virtual area of 0x3f800000 bytes
