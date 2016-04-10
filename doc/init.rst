@@ -318,6 +318,7 @@ rte_eal_memory_init
 ====================
 
 主进程调用rte_eal_hugepage_init，子进程调用rte_eal_hugepage_attach
+
 相关的外部接口及变量
 ---------------------
 
@@ -326,6 +327,7 @@ rte_eal_memory_init
 
 主要接口描述
 ------------
+
 rte_eal_hugepage_init
 =======================
 
