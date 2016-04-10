@@ -82,7 +82,7 @@ rte_eal_cpu_init
       会lcore_config[lcore_id].socket_id = 0;否则退出程序，打印堆栈。
 eal_parse_args
 ===============
- ::
+ .. code-block:: c
 
  EAL common options:
   -c COREMASK         Hexadecimal bitmask of cores to run on
@@ -159,6 +159,7 @@ eal_parse_args
     (0,6) 表示0和6号核心为一个组？？
     注意:－表示范围
     
+   ::  
     /*
      * The format pattern: --lcores='<lcores[@cpus]>[<,lcores[@cpus]>...]'
      * lcores, cpus could be a single digit/range or a group.
