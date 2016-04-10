@@ -406,6 +406,7 @@ lib/librte_eal/linuxapp/eal/eal_memory.c
 主要接口描述
 ------------
 *  map_all_hugepages(struct hugepage_file *hugepg_tbl,struct hugepage_info *hpi, int orig) 
+
   :: 
   
     循环hpi->num_pages[0]遍历，比如设置512个内存大页面，则会创建512个rtemap_xxx 个文件。
