@@ -30,22 +30,18 @@ rte_eal_cpu_init
 该函数将输出如下信息
 
 :: 
-    "
+
     EAL: Detected lcore 0 as core 0 on socket 0
-    
     EAL: Detected lcore 1 as core 0 on socket 0
-    
     EAL: Detected lcore 2 as core 0 on socket 0
-    
     EAL: Detected lcore 3 as core 0 on socket 0
-    
     EAL: Support maximum 128 logical core(s) by configuration.
-    
     EAL: Detected 4 lcore(s)
-    "
+    
 
 相关的外部接口及变量
 ---------------------
+
 rte_config
 
 lcore_config
@@ -64,22 +60,32 @@ rte_eal_cpu_init
 
 主要接口描述
 ------------
+
 * cpu_detected(lcore_id)
+
     检测对应lcore_id是否存在
+    
     读取/sys/devices/system/cpu/cpu%u/topology/core_id是否存在
 
 * cpu_core_id(lcore_id)
+
     获取lcore_id对应core_id,既通过逻辑核心id获取物理核心id
+    
     读取/sys/devices/system/cpu/cpu%u/topology/core_id得值，即物理核心id
 
 * eal_cpu_socket_id 
+
     获取lcore_id对应得socket
+    
     首先从/sys/devices/system/cpu/cpu%u/读取是否包含nodeX的目录，如果读取到则X即socketid
+    
     若不包含，则从/sys/devices/system/cpu/cpu％u/topology/physical_package_id文件中获取,以替代socketid
+    
      Note: physical package id != NUMA nmde, but we use it as a fallback for kernels which don't create a nodeY link
 
      如果获取的socketid大于RTE_MAX_NUMA_NODES，则根据RTE_EAL_ALLOW_INV_SOCKET_ID宏定义来觉得。当设置RTE_EAL_ALLOW_INV_SOCKET_ID时
       会lcore_config[lcore_id].socket_id = 0;否则退出程序，打印堆栈。
+      
 eal_parse_args
 ===============
  .. code-block:: c
@@ -140,15 +146,20 @@ eal_parse_args
 
 相关的外部接口和变量
 ---------------------
+
 函数调用
 --------
+
     eal_reset_internal_config(&internal_config);//初始化默认参数
+    
 主要接口描述
 ------------
 *   eal_parse_coremask:解析-c 参数，并会修改rte_config及lcore_config中lcore对应的计数、flag等
-*   eal_parse_corelist:解析-l 与-c效果相同;可以同时添加-c -l,但是会取后面的那个选项的配置。
-*   eal_parse_lcores :解析--lcore,重新设置lcore绑定的cpu. 
 
+*   eal_parse_corelist:解析-l 与-c效果相同;可以同时添加-c -l,但是会取后面的那个选项的配置。
+
+*   eal_parse_lcores :解析--lcore,重新设置lcore绑定的cpu. 
+   .. code-block:: c
     -c指定的核心，必须都重新设定，该函数首先会lcore_config[idx].core_index = -1;将所有
     核心对应设置为无效。
     参考下面的注释，以“,”隔开。
@@ -159,7 +170,6 @@ eal_parse_args
     (0,6) 表示0和6号核心为一个组？？
     注意:－表示范围
     
-   ::  
     /*
      * The format pattern: --lcores='<lcores[@cpus]>[<,lcores[@cpus]>...]'
      * lcores, cpus could be a single digit/range or a group.
@@ -176,15 +186,23 @@ eal_parse_args
      */
 
 *  rte_eal_devargs_add:解析-b -c --dev ,将调用该函数。
+
      --dev:添加虚拟驱动
+     
      --w:  将只会加载-w指定的网卡，只通过setup.sh脚步配置的网卡时不会加载的。 通过查看变量rte_eth_devices得出的结论。
+     
      --b: 指定网卡加入黑名单，即被指定网卡不会被加载。 
     
     该函数逻辑：创建rte_devargs-> 解析参数->将创建的rte_devargs挂在devargs_list链表上。
+    
     rte_devargs结构体储存网卡设备类型（黑名单，白名单，虚拟驱动）->设备对应的设备的pci编号或驱动类类型（虚拟驱动有eth_pcap,if之类）
+    
 * eal_parse_proc_type
+
     默认程序时RTE_PROC_PRIMARY
+    
 * 其他
+
     其他参数大多存在来internal_config全局变量中
 
 eal_hugepage_info_init 
@@ -353,9 +371,9 @@ lib/librte_eal/linuxapp/eal/eal_memory.c
     
     将大页内存信息存入/var/run/.rte_hugepage_info的共享内存
     
-若干个页根据是否连续，是否同一个socket，是否相同页尺寸等，\
+    若干个页根据是否连续，是否同一个socket，是否相同页尺寸等，\
 
-   分成最多RTE_MAX_MEMSEG(默认256)个内存段(memory segment)：
+    分成最多RTE_MAX_MEMSEG(默认256)个内存段(memory segment)：
 
 .. code-block:: c
 
@@ -389,6 +407,7 @@ lib/librte_eal/linuxapp/eal/eal_memory.c
 ------------
 *  map_all_hugepages(struct hugepage_file *hugepg_tbl,struct hugepage_info *hpi, int orig) 
   :: 
+  
     循环hpi->num_pages[0]遍历，比如设置512个内存大页面，则会创建512个rtemap_xxx 个文件。
    
     eal_get_hugefile_path将返回rte_mapxxx文件名称，放到hugepg_tbl[i].filepath中。
