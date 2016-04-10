@@ -22,23 +22,27 @@ log
 rte_eal_cpu_init
 =================
 该函数主要是解析/sys/devices/system/cpu文件，获取物理及逻辑核心，并填充cpu_info信息。
+
 主要设置了全局变量rte_config的lcore_count lcore_role,该字段是当前机器所有逻辑核心数。
-    设置了全局变量lcore_config的core cpu_set相关信息
+
+设置了全局变量lcore_config的core cpu_set相关信息
+    
 该函数将输出如下信息
 
-"
-EAL: Detected lcore 0 as core 0 on socket 0
-
-EAL: Detected lcore 1 as core 0 on socket 0
-
-EAL: Detected lcore 2 as core 0 on socket 0
-
-EAL: Detected lcore 3 as core 0 on socket 0
-
-EAL: Support maximum 128 logical core(s) by configuration.
-
-EAL: Detected 4 lcore(s)
-"
+:: 
+    "
+    EAL: Detected lcore 0 as core 0 on socket 0
+    
+    EAL: Detected lcore 1 as core 0 on socket 0
+    
+    EAL: Detected lcore 2 as core 0 on socket 0
+    
+    EAL: Detected lcore 3 as core 0 on socket 0
+    
+    EAL: Support maximum 128 logical core(s) by configuration.
+    
+    EAL: Detected 4 lcore(s)
+    "
 
 相关的外部接口及变量
 ---------------------
