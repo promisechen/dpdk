@@ -1,6 +1,9 @@
 
 http://www.cnblogs.com/MerlinJ/p/4074391.html
+
 http://www.cnblogs.com/ding-linux-coder/p/4922583.html
+
+
 log
 ====
 
@@ -340,7 +343,7 @@ lib/librte_eal/linuxapp/eal/eal_memory.c
 若干个页根据是否连续，是否同一个socket，是否相同页尺寸等，\
    分成最多RTE_MAX_MEMSEG(默认256)个内存段(memory segment)：
 
-    .. code-block:: c
+.. code-block:: c
 
  if (new_memseg) {
 
@@ -409,7 +412,7 @@ lib/librte_eal/linuxapp/eal/eal_memory.c
    
     核心代码
   
-    .. code-block :: c
+.. code-block:: c
 
  for (j = i+1; j < hpi->num_pages[0] ; j++) {
  #ifdef RTE_ARCH_PPC_64
@@ -450,7 +453,9 @@ lib/librte_eal/linuxapp/eal/eal_memory.c
 * get_virtual_area(size_t *size, size_t hugepage_sz) 获取虚拟地址空间.有两点：1. 使用mmap分配size+hugepage_sz大小空间 2.如果分配不出来减去hugepage_sz
 
   在分配，直至分配出来为止。并修改size值，把他传给调用者。3,munmap掉刚分配出的内存。4.按照hugepage_sz大小对其，并返回对其后的地址（在调用mmap时故意多加来一个页面大小）
+
 下面初始化就是该函数打印的，总共分512个大页，共5段连续内存块。
+
 .. code-block:: c
 
 EAL: Ask a virtual area of 0x200000 bytes
@@ -466,10 +471,15 @@ EAL: Virtual area found at 0x7fffb6600000 (size = 0x200000)
 EAL: Requesting 512 pages of size 2MB from socket 0
 
 * unmap_all_hugepages_orig 调用munmap将第一次mmap的大页(hugepg_tbl[i].orig_va)释放掉。
+
 * calc_num_pages_per_socket 计算每个socket的页面数，应该与--socket-mem有关。（我感觉会根据某种策略来选择保留的大页面。todo）
+
 * unmap_unneeded_hugepages 释放不用的大页面内存。感觉这个函数与calc_num_pages_per_socket有很大关系。
   }
+
 * unlink_hugepage_files 如果设置来－－huge-unlink，则会调用该函数，Unlink hugepage files after init。
 
-*create_shared_memory copy_hugepages_to_shared_mem: 使用/var/run/.rte_hugepage_info 调用nmap创建共享内存，将大页信息纪录到共享内存中。
+* create_shared_memory copy_hugepages_to_shared_mem: 使用/var/run/.rte_hugepage_info 调用nmap创建共享内存，将大页信息纪录到共享内存中。
+
+
 
