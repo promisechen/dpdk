@@ -245,8 +245,12 @@ rte_config_init
   参见rte_eal_config.h 中的struct rte_mem_config结构体
 
 * 如果是从进程则会先获取先调用mmap,获取主进程设置的rte_config.mem_cfg_addr(主进程映射的地址空间)，
+
   从新调用mmap(使用祝进程的虚拟地址)，从而保证主从进程虚拟地址相同。
+  
   注意:从进程将一直等待主进程(rte_eal_mcfg_complete完成mem配置)，才会从新调用rte_eal_config_reattach()
+  
+  .. code-block:: c
     rte_config_init(void)
     {
     	rte_config.process_type = internal_config.process_type;
@@ -333,16 +337,19 @@ rte_eal_hugepage_init
 
 lib/librte_eal/linuxapp/eal/eal_memory.c
 
-*  1. map N huge pages in separate files in hugetlbfs
-*  2. find associated physical addr
-*  3. find associated NUMA socket ID
-*  4. sort all huge pages by physical address
-*  5. remap these N huge pages in the correct order
-*  6. unmap the first mapping
-*  7. fill memsegs in configuration with contiguous zones
+* map N huge pages in separate files in hugetlbfs
+* find associated physical addr
+* find associated NUMA socket ID
+* sort all huge pages by physical address
+* remap these N huge pages in the correct order
+* unmap the first mapping
+* fill memsegs in configuration with contiguous zones
     这个时候可以正确设置num_pages了internal_config.hugepage_info[j].num_pages[socket]++;
+    
     将大页内存信息存入/var/run/.rte_hugepage_info的共享内存
+    
 若干个页根据是否连续，是否同一个socket，是否相同页尺寸等，\
+
    分成最多RTE_MAX_MEMSEG(默认256)个内存段(memory segment)：
 
 .. code-block:: c
@@ -376,7 +383,7 @@ lib/librte_eal/linuxapp/eal/eal_memory.c
 主要接口描述
 ------------
 *  map_all_hugepages(struct hugepage_file *hugepg_tbl,struct hugepage_info *hpi, int orig) 
-  
+  :: 
     循环hpi->num_pages[0]遍历，比如设置512个内存大页面，则会创建512个rtemap_xxx 个文件。
    
     eal_get_hugefile_path将返回rte_mapxxx文件名称，放到hugepg_tbl[i].filepath中。
