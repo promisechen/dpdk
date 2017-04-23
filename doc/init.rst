@@ -335,8 +335,16 @@ rte_eal_pci_init(todo)
 相关的外部接口及变量
 ---------------------
 
+pci_driver_list 驱动列表
+pci_device_list 设备列表
+nb_ports   端口总个数
+rte_eth_devices 端口对应数组指针
+
 函数调用
 ---------
+rte_eth_dev_init 初始化端口数组  
+rte_eth_driver_register 注册端口初始化销毁的函数回调  
+
 
 主要接口描述
 ------------
