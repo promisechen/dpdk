@@ -1,0 +1,78 @@
+一、例子描述
+	本demo唯一目的是描述通过硬件保证同源同宿的方法（RSS）。
+    基于DPDK1.7.0中l2fwd进行修改，本例子保证同源同宿，即同一个源地址的报文将分配到同一个线程上。
+	将加载port0、port1作为收发端口，固化代码中，不可配置。
+	固化代码如下：
+	for ( i = 0 ; i < queue_num ; i++ )
+    {
+        qconf = &lcore_queue_conf[i];
+        qconf->n_rx_port = 2;           /*启动两个端口*/
+        qconf->rx_port_list[0] = 0;     /*port 0*/
+        qconf->rx_port_list[1] = 1;     /*port 1*/
+    }
+	
+二、如何运行
+    ./build/l2fwd -c ff -n 2 -- -q 8 表示使用8个队列(启用8个lcore)
+	-c lcore的掩码，总lcore数量应大于等于-q 参数
+	-q 最小值为1,最大值不得超过网卡队列最大值或核数
+	
+	虚拟机支持网卡多队列的方法：
+		关机后，虚拟机vmx文件修改ethernet1.virtualDev参数为"vmxnet3"
+		
+三、主要步骤如下：
+    主要注意两点：正确设置rte_eth_conf;所有的RX TX的同一队列ID均对应同一个lcore（port0的rx tx 的3号队列与port1的rx tx 的3号队列均绑定到第3号核心）;
+
+1.配置dev（重点）
+  rte_eth_dev_configure(portid, queue_num, queue_num, &port_conf);
+  其中queune_num是设置网卡RX TX的队列个数
+  设置port_conf如下：
+	/*使用该种子，保证同一源ip  hash到同一个队列编号下，从而保证同源同宿*/
+	static uint8_t seed[40] = {
+	   0x5A, 0x6D, 0x5A, 0x6D, 0x5A, 0x6D, 0x5A, 0x6D,
+		  0x5A, 0x6D, 0x5A, 0x6D, 0x5A, 0x6D, 0x5A, 0x6D,
+		  0x5A, 0x6D, 0x5A, 0x6D, 0x5A, 0x6D, 0x5A, 0x6D,
+		 0x5A, 0x6D, 0x5A, 0x6D, 0x5A, 0x6D, 0x5A, 0x6D,
+		  0x5A, 0x6D, 0x5A, 0x6D, 0x5A, 0x6D, 0x5A, 0x6D
+	 };
+
+	 static struct rte_eth_conf port_conf = {
+		 .rxmode = {
+			.mq_mode = ETH_MQ_RX_RSS,/*开启RSS功能*/
+		  .max_rx_pkt_len = ETHER_MAX_LEN,
+			  .split_hdr_size = 0,
+			 .header_split   = 0, /**< Header Split disabled */
+			  .hw_ip_checksum = 1, /**< IP checksum offload enabled */
+			.hw_vlan_filter = 0, /**< VLAN filtering disabled */
+			 .jumbo_frame    = 0, /**< Jumbo Frame Support disabled */
+			.hw_strip_crc   = 0, /**< CRC stripped by hardware */
+		 },
+		 .rx_adv_conf = {
+			 .rss_conf = {/*RSS的配置*/
+				 .rss_key = seed,
+			   .rss_key_len = sizeof(seed),
+			 .rss_hf = ETH_RSS_IPV4,
+	},
+	},
+	 .txmode = {
+	 .mq_mode = ETH_MQ_TX_NONE,
+	},
+	};
+2. init one RX/TX queue 
+    rte_eth_rx_queue_setup(portid, queueid, nb_rxd,
+					     rte_eth_dev_socket_id(portid), &rx_conf,
+					     l2fwd_pktmbuf_pool);
+	ret = rte_eth_tx_queue_setup(portid, queueid, nb_txd,
+    				rte_eth_dev_socket_id(portid), &tx_conf);
+3.分配lcore与queue关系，并根据对应关系接收、发送报文
+	queue_id是自动分配的，保证2张网卡的RX Queue 和TX Queue对应到一个lcore.
+	对于本例子，同一个lcore将对port0 port1的同一个queue进行收发。
+	比如下面的分配方式：
+	lcore_id  port0_rx_queue_id  port0_tx_queue_id port1_rx_queue_id  port1_tx_queue_id
+	   1   			0 				0					0					0
+	   2   			1 				1					1					1
+	   3   			2				2					2					2	   
+	
+	rte_eth_rx_burst((uint8_t) portid, queue_id,
+						 pkts_burst, MAX_PKT_BURST);
+	rte_eth_tx_burst(port, (uint16_t) qconf->queue_id, m_table, (uint16_t) n);
+

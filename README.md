@@ -1,3 +1,27 @@
+# 
+rst
+-----------------------------
+基于DPDK1.8.0,封堵的样例程序
+
+dpdkmakefile
+-----------------------------
+不遵循dpdk的makefile规则，直接引用dpdk静态库和.h文件，参见makefie
+
+test-mirror
+-----------------------------
+被mirror替代
+基于dpdk1.8.0的txonly模式的镜像数据包例子程序
+
+mirror
+-----------------------------
+基于dpdk1.8.0的l2fwd修改的镜像数据包例子程序.用以替代test-mirror
+
+rss
+-----------------------------
+通过网卡RSS特性保证同源同宿
+
+
+
 #杂记
 1. 未绑定dpdk驱动时候，查看网卡是哪个cpu 
 `cat /sys/class/net/eth0/device/local_cpulist`

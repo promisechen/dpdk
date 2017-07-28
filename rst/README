@@ -1,0 +1,10 @@
+vm:
+./build/l2fwd -c 3 -n 2 -- -p 3
+
+13.31:
+./build/l2fwd -c 1 -n 2 -- -p 1
+
+
+
+
+
