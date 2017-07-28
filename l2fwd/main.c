@@ -68,10 +68,10 @@
 #include <rte_ring.h>
 #include <rte_mempool.h>
 #include <rte_mbuf.h>
-#include "public.h"
-#include "rubicon.h"
-#include "ModuleDecode.h"
+#include "decode.h"
 
+#define READ_SHORT(p)   ((p[0] << 8) | p[1])
+#define READ_INT(p)     ((p[0] << 24) | (p[1] << 16) | (p[2] << 8) | p[3])
 #define RTE_LOGTYPE_L2FWD RTE_LOGTYPE_USER1
 
 #define MBUF_SIZE (2048 + sizeof(struct rte_mbuf) + RTE_PKTMBUF_HEADROOM)

@@ -4,10 +4,8 @@
 #include <Windows.h>
 #else
 #endif
-#include "public.h"
-#include "rubicon.h"
 
-#include "ModuleDecode.h"
+#include "decode.h"
 
 
 //////////////////////////////////////////////////////////////////////////

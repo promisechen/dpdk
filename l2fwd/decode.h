@@ -1,12 +1,12 @@
 
-/*class CModuleDecode
-{
-public:
-    int Init();
-    int Fini();
-
-    int Decode(Packet_t * pPacket);
-};*/
+typedef char int8;
+typedef unsigned char uint8;
+typedef short int16;
+typedef unsigned short uint16;
+typedef int int32;
+typedef unsigned int uint32;
+typedef long long int64;
+typedef unsigned long long uint64;
 
 // ETHERNET
 #define ETH_PROTOCOL_IP_REV     0x0008
@@ -176,6 +176,89 @@ typedef struct gtp_header_s
     uint32 unTEID;
 }gtp_header_t;
 
+
+
+typedef enum Direction_s
+{
+    DIRECTION_OUT,
+    DIRECTION_IN,
+    DIRECTION_UNKNOWN,
+    DIRECTION_MAX,
+}Direction;
+
+typedef enum PacketType_s
+{
+    PacketTypeUnknown,
+    PacketTypePacket,
+    PacketTypeRecord,
+    PacketTypeUserlog,
+}PacketType;  
+
+#define PACKET_OFFLOAD_FLAG_IP_XSUM     0x01
+#define PACKET_OFFLOAD_FLAG_TCP_XSUM     0x02
+#define PACKET_OFFLOAD_FLAG_UDP_XSUM     0x04
+
+typedef enum IPProtocol_s
+{
+    UNKNOWN,
+    IPv4,
+    IPv6,
+}IPProtocol;
+
+typedef union IPAddr_u
+{
+    unsigned int unIP4;
+    unsigned char ucIP6[16];
+}IPAddr_t;
+
+typedef struct Packet_s
+{
+    void * pMBuf;
+    // unsigned int unTimeSec;
+    // unsigned int unTimeUSec;
+    unsigned long long ullTimeMS;
+    unsigned int unNicPortSrc;
+    unsigned int unNicPortDst;
+    unsigned int unNicPortGroup;
+
+    Direction enDirection;
+    PacketType enType;
+    int nOffloadFlag;
+
+    // IP header info
+    IPProtocol enIPProtocol;
+    IPAddr_t stIpSrc;
+    IPAddr_t stIpDst;
+
+    // TCP UDP header info
+    unsigned int unCtrlProtocol;
+    unsigned short usPortSrc;
+    unsigned short usPortDst;
+    unsigned int unTCPFin;
+
+    // spot general info
+    int nPatternHit;
+
+    // packet data info
+    unsigned int unLen;
+    unsigned int unPayloadLen;
+    unsigned char * pData;
+    unsigned char * pCurrent;
+    unsigned char * pEnd;
+    unsigned char * pPayload;
+
+    unsigned char * pTMAIP;
+    unsigned char * pTMAGRE;
+    unsigned char ucSeq;
+    unsigned char ucChannel;
+
+    unsigned char * pIPOuter;
+    unsigned char * pUDPOuter;
+    unsigned char * pIPInner;
+    unsigned char * pTcpUdpInner;
+    // unsigned char * pStart;
+}Packet_t;
+
 //////////////////////////////////////////////////////////////////////////
 #define COPY_IP(Dst, Src) \
     Dst.unIP4 = Src.unIP4;\
@@ -213,3 +296,5 @@ else\
 }
 
 void * DecodeEth(Packet_t * pPacket);
+
+
